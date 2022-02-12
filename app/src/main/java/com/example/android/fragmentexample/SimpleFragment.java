@@ -1,5 +1,6 @@
 package com.example.android.fragmentexample;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -20,8 +21,29 @@ public class SimpleFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static final String CHOICE_PARAM = "choice-param";
     private  static  final  int YES = 0;
     private  static  final int NO = 1;
+    private  static  final  int NONE = 2;
+
+    public int mcurrentChoice = NONE;
+    private  OnFragmentInteractionListener mListener;
+
+    interface OnFragmentInteractionListener{
+        void OnRadioButtonChecked(int choice);
+
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof OnFragmentInteractionListener){
+            mListener = (OnFragmentInteractionListener) context;
+        }
+        else {
+            throw new ClassCastException(context.toString() + getResources().getString(R.string.exception_message));
+        }
+    }
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -54,6 +76,15 @@ public class SimpleFragment extends Fragment {
         return fragment;
     }
 
+    public static SimpleFragment newInstance(int choice){
+        SimpleFragment fragment = new SimpleFragment();
+        Bundle args = new Bundle();
+        args.putInt(CHOICE_PARAM, choice);
+        fragment.setArguments(args);
+        return fragment;
+
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +103,12 @@ public class SimpleFragment extends Fragment {
         final TextView questionTextView = view.findViewById(R.id.fragment_header);
 
         RadioGroup radioGroup = view.findViewById(R.id.radio_group);
+        if (getArguments().containsKey(CHOICE_PARAM)){
+            mcurrentChoice = getArguments().getInt(CHOICE_PARAM);
+            if (mcurrentChoice != NONE){
+                radioGroup.check(radioGroup.getChildAt(mcurrentChoice).getId());
+            }
+        }
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
@@ -80,9 +117,17 @@ public class SimpleFragment extends Fragment {
 
                 if (idx == YES){
                     questionTextView.setText(R.string.yes_message);
+                    mcurrentChoice = YES;
+                    mListener.OnRadioButtonChecked(YES);
+                }
+                else if (idx == NO){
+                    questionTextView.setText(R.string.no_message);
+                    mcurrentChoice = NO;
+                    mListener.OnRadioButtonChecked(NO);
                 }
                 else {
-                    questionTextView.setText(R.string.no_message);
+                    mcurrentChoice = NONE;
+                    mListener.OnRadioButtonChecked(NONE);
                 }
             }
         });
